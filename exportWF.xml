@@ -1,0 +1,574 @@
+﻿<?xml version="1.0" encoding="utf-8"?><config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="obj28511864" name="wf_export2Cosmos_test" modifiedDate="2023-04-11T08:33:42.427Z" xmlns="urn:schemas-teradp-com:gn4tera"><scopeRef idref="obj12" /><data id="data54671420" mime="application/xml" size="30004"><xml>﻿<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="wf_export2CosMos_test" modifiedDate="2018-10-10T16:55:03.620Z" xmlns="urn:schemas-teradp-com:gn4tera"><scopeRef idref="obj12" /><data id="data3413383" mime="application/xml" size="29750"><xml>﻿<codeWorkflow xmlns="http://www.teradp.com/schemas/GN4/1/WFRes.xsd"><References><Reference>.\GNClient.dll</Reference></References><Imports><Import>System</Import><Import>System.Collections</Import><Import>System.Collections.Generic</Import><Import>System.Diagnostics</Import><Import>System.Linq</Import><Import>System.Threading.Tasks</Import><Import>System.Xml</Import><Import>System.Xml.Linq</Import><Import>System.Xml.XPath</Import><Import>System.Xml.Xsl</Import><Import>System.Net</Import><Import>System.String</Import><Import>TeraDP.GN4</Import><Import>TeraDP.GN4.Common</Import><Import>TeraDP.GN4.Schema.Class</Import></Imports><Members><![CDATA[
+Dim loadFileNames As XElement = <root xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                                    <xsl:variable name="edition" select="gn4:editionRef/nav:refObject/gn4:edition"/>
+                                    <xsl:variable name="prefix" select="concat($edition/gn4:titleRef/nav:refObject/gn4:title/@name,fn:formatDateTime(fn:fromUTCToClientLocalTime($edition/@date,$context/lc:LoginContext/@ClientTimeZoneId),'yyMMdd'))"/>
+                                    <xsl:variable name="version">
+                                      <xsl:choose>
+                                        <xsl:when test="$pars/*/add[@key='version']">
+                                          <xsl:value-of select="$pars/*/add[@key='version']/@value"/>
+                                        </xsl:when>
+                                        <xsl:otherwise>
+                                          <xsl:text>1</xsl:text>
+                                        </xsl:otherwise>
+                                      </xsl:choose>
+                                    </xsl:variable>
+                                    <xsl:variable name="yyyy" select="fn:formatDateTime(fn:toLocalTime($edition/@date),'yyyy')"/>
+                                    <xsl:variable name="yy" select="fn:formatDateTime(fn:toLocalTime($edition/@date),'yy')"/>
+                                    <xsl:variable name="MM" select="fn:formatDateTime(fn:toLocalTime($edition/@date),'MM')"/>
+                                    <xsl:variable name="dd" select="fn:formatDateTime(fn:toLocalTime($edition/@date),'dd')"/>
+                                    <xsl:variable name="pdfVariantName" select="$pars/*/add[@key='ePaperPdfVariantName']/@value"/>
+                                    <xsl:variable name="pdfVariant" select="gn4:variants/gn4:ref[nav:refObject/gn4:*/@name=$pdfVariantName]"/>
+
+                                    <xsl:variable name="pageNumber" select="@number"/>
+                                    <xsl:variable name="master" select="gn4:masterRef/nav:refObject/gn4:master"/>
+                                    <xsl:variable name="pageH" select="number($master/@height + $master/@topM + $master/@bottomM)"/>
+                                    <xsl:variable name="pageW" select="number($master/@width + $master/@leftM + $master/@rightM)"/>
+                                    <xsl:variable name="topM" select="$master/@topM"/>
+                                    <xsl:variable name="leftM" select="$master/@leftM"/>
+                                    <xsl:variable name="rightM" select="$master/@rightM"/>
+                                    <xsl:variable name="bottomM" select="$master/@bottomM"/>
+                                    <xsl:variable name="layersContent" select="gn4:layers/gn4:ref/nav:refObject/gn4:pageLayer/gn4:content/LayerContent"/>
+                                    <!-- Get all the objects linked to the page that are not in folder with the "do not archive flag"-->
+                                    <xsl:variable name="linkedObjects" select="nav:referencing/nav:referencingBy[@attrName='linkObject.pageLayers.pageRef']/nav:refs/nav:refObject[not(*/gn4:folderRef/nav:refObject/gn4:folder/@doNotArchive='true')] "/>
+
+                                    <pageName>
+                                      <xsl:value-of select="@descName"/>
+                                    </pageName>
+                                    <articleIds>
+                                      <xsl:for-each select="$layersContent/e[@xsi:type='FrameDesc' and @txtLI!='0']">
+                                        <!-- omit elements outside the bounding box of the page -->
+                                        <xsl:if test="@FX&gt;=0 and (@FX + $leftM + $rightM) &lt;= $pageW and @FY &gt;=0 and (@FY + $bottomM + $topM) &lt; $pageH">
+                                          <xsl:variable name="layerId" select="../../../@id"/>
+                                          <xsl:variable name="txtLI" select="@txtLI"/>
+                                          <xsl:variable name="txt" select="$linkedObjects/*[nav:referencing/nav:referencingBy/nav:refs/nav:refObject/gn4:txtGeometry/gn4:jumps/gn4:ref[@idref=$layerId and @li=$txtLI]]"/>
+                                          <xsl:variable name="txtId" select="$txt/@id"/>
+                                          <xsl:variable name="article" select="$linkedObjects/*[gn4:txts/gn4:*/@id=$txtId]"/>
+                                          <xsl:if test="string($article/@id)">
+                                            <xsl:value-of select="fn:objectIdFromString($article/@id)"/>
+                                            <xsl:text>,</xsl:text>
+                                          </xsl:if>
+                                        </xsl:if>
+
+                                      </xsl:for-each>
+                                    </articleIds>
+                                    <imgIds>
+                             <xsl:for-each select="$layersContent/e[@xsi:type='BitmapDesc' and @imgLI!='0']">
+                                        <xsl:if test="@FX&gt;=0 and (@FX + $leftM + $rightM) &lt;= $pageW and @FY &gt;=0 and (@FY + $bottomM + $topM) &lt; $pageH">
+                                          <xsl:variable name="layerId" select="../../../@id"></xsl:variable>
+                                          <xsl:variable name="imgId" select="@imgLI"></xsl:variable>
+                                          <xsl:variable name="img" select="$linkedObjects/gn4:img[fn:objectIdFromString(@id)=$imgId]"></xsl:variable>
+                                          <xsl:variable name="imgArtLinkedId" select="fn:objectIdFromString($img/nav:referencing/nav:referencingBy[@attrName='photoCaption.ref']/nav:refs/nav:refObject/@idref)"/>
+                                          <!-- If the img derives from an image, we extract the original file -->
+                                          <xsl:variable name="sourceImageId" select="$img/nav:sources/nav:actionDesc[1][@ObjectTypeName='image']/@ObjectId"/>
+                                          <xsl:variable name="gnPhotoId">
+                                            <xsl:choose>
+                                              <xsl:when test="string($sourceImageId)">
+                                                <xsl:value-of select="$img/nav:sources/nav:actionDesc[1]/gn4:object/nav:refObject/gn4:image/gn4:sourceId"/>
+                                              </xsl:when>
+                                              <xsl:otherwise>0</xsl:otherwise>
+                                            </xsl:choose>
+                                          </xsl:variable>
+                                          <xsl:variable name="fileExt">
+                                            <xsl:choose>
+                                              <xsl:when test="string($sourceImageId)">
+                                                <xsl:value-of select="$img/nav:sources/nav:actionDesc[1]/gn4:object/nav:refObject/gn4:image/gn4:data/@nav:mimeExt"/>
+                                              </xsl:when>
+                                              <xsl:otherwise>
+                                                <xsl:value-of select="$img/gn4:low/@nav:mimeExt"/>
+                                              </xsl:otherwise>
+                                            </xsl:choose>
+                                          </xsl:variable>
+                                          <xsl:if test="$img[not(*/gn4:folderRef/nav:refObject/gn4:folder/@doNotArchive='true')]">
+                                            <xsl:if test="$imgArtLinkedId>0">
+                                              <img linkedto="{$imgArtLinkedId}" id="{$imgId}" sourceImageId="{$sourceImageId}" gnphotoID="{$gnPhotoId}" name="@name,'.jpg'" thumbName="{concat($img/@name,'_thumb.jpg')}"/>
+                                            </xsl:if>
+                                          </xsl:if>
+                                        </xsl:if>
+                                      </xsl:for-each>
+                                             </imgIds>
+
+                                  </root>
+
+
+  Sub LogInfo(message As String)
+    LogMessage(message, TeraDP.GN4.Workflow.LogEntry.LogCode.Info)
+  End Sub
+
+  Sub LogWarning(message As String)
+    LogMessage(message, TeraDP.GN4.Workflow.LogEntry.LogCode.Warning)
+  End Sub
+
+  Sub LogError(message As String)
+    LogMessage(message, TeraDP.GN4.Workflow.LogEntry.LogCode.Error)
+
+    'we want to stop the execution if an error occurs, so throw an exception
+    Throw New TeraDP.GN4.Common.GenericException(message)
+  End Sub
+
+  Sub LogMessage(message As String, code As TeraDP.GN4.Workflow.LogEntry.LogCode)
+    If String.IsNullOrEmpty(message) Then Return 'nothing to do
+
+    Dim logAct As Log = New Log(Context) With {.Name = "log message"}
+    logAct.Code = code
+    logAct.Message = message
+    Dim logRes As LogResult = logAct.Do()
+  End Sub
+
+  Sub OutputMsg(message As String)
+    If String.IsNullOrEmpty(message) Then Return 'nothing to do
+    Dim msgAct As OutputMessage = New OutputMessage(Context) With {.Name = "output message"}
+    msgAct.Message = message
+    msgAct.Do()
+  End Sub
+
+  Function CreateFolder(folderRoot As String, folderName As String, userName As String, password As String) As Boolean
+    If folderRoot.StartsWith("ftp:") Or folderRoot.StartsWith("sftp:") Then
+      Dim request = DirectCast(FtpWebRequest.Create(folderRoot & folderName), FtpWebRequest)
+      request.Credentials = New NetworkCredential(userName, password)
+      request.Method = WebRequestMethods.Ftp.MakeDirectory
+      request.Proxy = Nothing
+      request.KeepAlive = True
+      Try
+        Using response As FtpWebResponse =
+          DirectCast(request.GetResponse(), FtpWebResponse)
+          ' Folder exists here
+        End Using
+
+      Catch ex As WebException
+        Dim response As FtpWebResponse =
+          DirectCast(ex.Response, FtpWebResponse)
+        'Does not exist
+        If response.StatusCode = FtpStatusCode.ActionNotTakenFileUnavailable Then
+          Dim requestCreate = DirectCast(WebRequest.Create(folderRoot & folderName & "/"), WebRequest)
+          requestCreate.Method = WebRequestMethods.Ftp.MakeDirectory
+          requestCreate.Credentials = New NetworkCredential(userName, password)
+          requestCreate.Proxy = Nothing
+          Dim FTPRes As FtpWebResponse
+          FTPRes = CType(requestCreate.GetResponse, FtpWebResponse)
+        End If
+      End Try
+    Else
+      IO.Directory.CreateDirectory(folderRoot & folderName)
+    End If
+    Return True
+  End Function
+
+  Function FolderExists(folder As String, userName As String, password As String) As Boolean
+    FolderExists = False
+    If folder.StartsWith("ftp:") Or folder.StartsWith("sftp:") Then
+      Dim request = DirectCast(FtpWebRequest.Create(folder), FtpWebRequest)
+      request.Method = WebRequestMethods.Ftp.ListDirectory
+      request.Credentials = New NetworkCredential(userName, password)
+      request.Proxy = Nothing
+      Try
+        Using request.GetResponse()
+          FolderExists = True
+        End Using
+      Catch generatedExceptionName As WebException
+        FolderExists = False
+      End Try
+    Else
+    End If
+
+    Return FolderExists
+  End Function
+
+  Function FileExists(fileUri As String, userName As String, password As String) As Boolean
+    FileExists = False
+    If fileUri.StartsWith("ftp:") Or fileUri.StartsWith("sftp:") Then
+      Dim request = DirectCast(FtpWebRequest.Create(fileUri), FtpWebRequest)
+      request.Method = WebRequestMethods.Ftp.GetFileSize
+      request.Credentials = New NetworkCredential(userName, password)
+      request.Proxy = Nothing
+      Try
+        Using request.GetResponse()
+          FileExists = True
+        End Using
+      Catch generatedExceptionName As WebException
+        FileExists = False
+      End Try
+    Else
+      FileExists = IO.File.Exists(fileUri)
+    End If
+    Return FileExists
+  End Function
+
+  Function DeleteFile(fileUri As String, userName As String, password As String) As Boolean
+    DeleteFile = True
+    If fileUri.StartsWith("ftp:") Or fileUri.StartsWith("sftp:") Then
+      Dim request = DirectCast(FtpWebRequest.Create(fileUri), FtpWebRequest)
+      request.Method = System.Net.WebRequestMethods.Ftp.DeleteFile
+      request.Credentials = New NetworkCredential(userName, password)
+      request.Proxy = Nothing
+      Try
+        Using request.GetResponse()
+          DeleteFile = True
+        End Using
+      Catch generatedExceptionName As WebException
+        DeleteFile = False
+      End Try
+    Else
+      Try
+        System.IO.File.Delete(fileUri)
+        DeleteFile = True
+      Catch ex As Exception
+        DeleteFile = False
+      End Try
+      Return DeleteFile
+    End If
+
+  End Function
+
+  Function CreateFile(fileSource As String, filePath As String, userName As String, password As String) As Boolean
+    CreateFile = True
+    If filePath.StartsWith("ftp:") Or filePath.StartsWith("sftp:") Then
+      Try
+        Dim request = DirectCast(WebRequest.Create(filePath), WebRequest)
+        request.Credentials = New NetworkCredential(userName, password)
+        request.Method = WebRequestMethods.Ftp.UploadFile
+        request.Proxy = Nothing
+
+        Dim sourceStream As New IO.StreamReader(fileSource)
+        Dim filecontents() As Byte = Text.Encoding.UTF8.GetBytes(sourceStream.ReadToEnd())
+        sourceStream.Close()
+        request.ContentLength = filecontents.Length
+
+        Dim requestStream As IO.Stream =
+          request.GetRequestStream()
+        requestStream.Write(filecontents, 0,
+          filecontents.Length)
+        requestStream.Close()
+      Catch ex As Exception
+        LogError(ex.Message)
+        Return False
+      End Try
+    Else
+      Try
+        System.IO.File.Copy(fileSource, filePath)
+      Catch ex As Exception
+        Return False
+      End Try
+
+    End If
+
+  End Function
+
+  Function ConvertToRGB(binary As Workflow.IActivityData) As Workflow.IActivityData
+
+    Dim transformImageAct As TransformData = New TransformData(Context) With {.Name = "Convert Image"}
+    transformImageAct.Data = binary
+    With transformImageAct 'set the conversion steps
+      Dim stepRGB As New Common.Step()
+      stepRGB.Conversion = "ChangeColorSpace"
+      stepRGB.Parameters.Add("RGB")
+      Dim stepScale As New Common.Step()
+      stepScale.Conversion = "Scale"
+      stepScale.Parameters.Add(1200)
+      .Steps.Add(stepRGB)
+      .Steps.Add(stepScale)
+    End With
+
+    Dim transformImageRes As TransformDataResult = transformImageAct.Do()
+    If transformImageRes.DataOut Is Nothing Then
+      Throw New TeraDP.GN4.Common.WorkflowException(String.Format("Failed converting image file (activity '{0}')", transformImageAct.Name))
+    End If
+    Return transformImageRes.DataOut
+  End Function
+
+  Function ConvertToJPEG(binary As TeraDP.GN4.Workflow.IActivityData) As TeraDP.GN4.Workflow.IActivityData
+
+    Dim transformImageAct As TransformData = New TransformData(Context) With {.Name = "Convert Image to Jpeg"}
+    transformImageAct.Data = binary
+    With transformImageAct 'set the conversion steps
+      Dim stepJPG As New Common.Step()
+      stepJPG.Conversion = "ChangeFormat"
+      stepJPG.Parameters.Add("image/jpg")
+      stepJPG.Parameters.Add(90)
+      stepJPG.Parameters.Add(300)
+      .Steps.Add(stepJPG)
+    End With
+
+    Dim transformImageRes As TransformDataResult = transformImageAct.Do()
+    If transformImageRes.DataOut Is Nothing Then
+      Throw New TeraDP.GN4.Common.WorkflowException(String.Format("Failed converting image file (activity '{0}')", transformImageAct.Name))
+    End If
+    Return transformImageRes.DataOut
+  End Function
+
+  Function strClean(strtoclean As String) As String
+
+    Dim Pattern = "[(?*"",\\<>&#~%{}+_.@:\/!;]+"
+    Dim objRegExp As New Text.RegularExpressions.Regex(Pattern)
+    Dim outputStr As String
+
+    outputStr = objRegExp.Replace(strtoclean, "")
+    outputStr = objRegExp.Replace(outputStr, "")
+
+    strClean = outputStr
+
+  End Function
+]]></Members><Sequential DisplayProgress="true"><![CDATA[
+'check parameters
+    Dim strCheck As String = ""
+
+    Dim destDir As String = Context.ParValue("destDir")
+    If destDir = "" Then
+      strCheck += "[destDir]"
+    Else
+      destDir=destDir.Replace("@",":")
+      If destDir.StartsWith("ftp") Then
+        If Not (destDir.EndsWith("/")) Then destDir = destDir & "/"
+      Else
+        If Not (destDir.EndsWith("\")) Then destDir = destDir & "\"
+      End If
+    End If
+
+
+    Dim workstateName As String = Context.ParValue("workstateName")
+    If workstateName = "" Then strCheck += "[workstateName]"
+
+    'Dim printerConfig As String = Context.ParValue("printerConfig")
+    'If printerConfig = "" Then strCheck += "[printerConfig]"
+
+    Dim destGNPhotoDir As String = ""
+    destGNPhotoDir = Context.ParValue("destGNPhotoDir")
+
+    Dim titleCode As String = ""
+    titleCode = Context.ParValue("titleCode")
+    If titleCode = "" Then strCheck += "[titleCode]"
+
+    Dim edDate As Date = Date.MinValue
+    Dim edDateStr As String = Context.ParValue("edDate")
+    If Not String.IsNullOrEmpty(edDateStr) Then
+      edDate = TeraDP.GN4.Common.XmlUtility.DateFromString(edDateStr)
+    End If
+
+    Dim debug As Boolean = Context.ParValueAsBool("debug", False)
+
+    If strCheck <> "" Then
+      LogWarning("Error checking the required parameter. Please verify that the following params are passed to the workflow: " & strCheck)
+      Return
+    End If
+
+    Dim searchPages As Search = New Search(Context) With {.Name = "Search today's pages"}
+    '******************** WARNING ***********************
+    '**** We search for Audit Entry "Open" because of a bug. As soon as the bug is fixed and implemented,
+    '**** it should be replaced with the correct value: "Print"
+    '**** [nav:audit/nav:actionDesc/@PrintConfigDesc=$printerConfig] cannot be used to identify the printer used
+    '****************************************************
+    If edDate = Date.MinValue Then
+      edDateStr = TeraDP.GN4.Common.XmlUtility.DateToString(DateTime.UtcNow.AddDays(1))
+      searchPages.Pars.Add("workstateName",workstateName)
+      searchPages.XQuery = "gn4:page[fn:inRelativeDays0(gn4:editionRef/nav:refObject/gn4:edition/@date,1,2)]" &
+                       "[gn4:workstateRef/nav:refObject/gn4:workstate/@name=$workstateName][gn4:editionRef/nav:refObject/gn4:edition/gn4:titleRef/nav:refObject/gn4:title/@name='" & titleCode & "'] order by gn4:editionRef/@idref"
+    Else
+      edDateStr = TeraDP.GN4.Common.XmlUtility.DateToString(edDate)
+      Dim fromDate As DateTime = New DateTime(edDate.Year, edDate.Month, edDate.Day).ToUniversalTime()
+      Dim toDate As DateTime = fromDate.AddDays(1)
+      searchPages.Pars.Add("workstateName",workstateName)
+      searchPages.XQuery = String.Format("gn4:page[gn4:editionRef/nav:refObject/gn4:edition[@date>='{0}' and @date<'{1}']]",
+    TeraDP.GN4.Common.XmlUtility.DateTimeToString(fromDate), TeraDP.GN4.Common.XmlUtility.DateTimeToString(toDate)) &
+                           "[gn4:workstateRef/nav:refObject/gn4:workstate/@name=$workstateName][gn4:editionRef/nav:refObject/gn4:edition/gn4:titleRef/nav:refObject/gn4:title/@name='" & titleCode & "'] order by gn4:editionRef/@idref"
+    End If
+    'Utils.Logwarning(searchPages.xquery)
+    Dim searchPagesRes As TeraDP.GN4.Server.CodeActivity.SearchResult = searchPages.Do()
+
+    If searchPagesRes.IdsCount = 0 Then
+      LogWarning(String.Format("There are no pages with workstate [" & workstateName & "] in editions with date '{0}'", edDateStr))
+      Return
+    End If
+
+    Dim editiondate As String = Nothing
+    If edDate = Date.MinValue Then
+      editiondate = Today.ToString("MMddyy")
+    Else
+      editiondate = edDate.ToString("MMddyy")
+    End If
+    Dim pageCounter As Integer = 0
+    Dim totalArtCounter As Integer = 0
+    Dim articleCounter As Integer = 0
+    Dim totalImgCounter As Integer = 0
+    Dim imgCounter As Integer = 0
+    Dim articleIds As List(Of Integer) = TeraDP.GN4.GNClient.StringUtility.ListFromString(Of Integer)("")
+    Dim imgXmlTot As XElement = <root/>
+    For Each pageId As Integer In searchPagesRes.IdsOut
+      Try
+
+        'load the xml of the image, to get the name and the extension
+        Dim loadObjAct As LoadObjects = New LoadObjects(Context) With {.Name = "loadObject", .Description = "Loading page [id:" & pageId.ToString() & "]"}
+        loadObjAct.ObjectIds = New List(Of Integer)({pageId})
+        loadObjAct.NavOptions = TeraDP.GN4.GNClient.DataNavigatorOption.Default Or TeraDP.GN4.GNClient.DataNavigatorOption.Referencing _
+                                  Or TeraDP.GN4.GNClient.DataNavigatorOption.Sources
+        loadObjAct.Xslt = loadFileNames
+        Dim loadObjActRes As LoadObjectsResult = loadObjAct.Do()
+        If debug Then loadObjActRes.XmlOut.Save("c:\temp\loadfilenames" & pageId.ToString() & ".xml")
+        Dim pageName As String = loadObjActRes.XmlOut.Root.<pageName>.Value
+        'if articles in the printed page are found...
+        If loadObjActRes.XmlOut.Root.<articleIds>.Value <> "" Then
+          If Not articleIds Is Nothing Then
+
+            articleIds.AddRange(TeraDP.GN4.GNClient.StringUtility.ListFromString(Of Integer)(loadObjActRes.XmlOut.Root.<articleIds>.Value.TrimEnd(CChar(","))))
+          Else
+            articleIds = TeraDP.GN4.GNClient.StringUtility.ListFromString(Of Integer)(loadObjActRes.XmlOut.Root.<articleIds>.Value.TrimEnd(CChar(",")))
+          End If
+          'remove duplicate articles
+          If Not articleIds Is Nothing Then articleIds = articleIds.Distinct().ToList
+        End If
+
+        Dim imgXml As IEnumerable(Of XElement) = loadObjActRes.XmlOut.Root.<imgIds>.Descendants
+
+        For Each img As XElement In imgXml
+          If imgXmlTot.XPathSelectElements("//img[@id=" & img.@id & "]").Count = 0 Then
+            imgXmlTot.Add(img)
+          End If
+        Next
+
+
+
+        pageCounter = pageCounter + 1
+      Catch ex As Exception
+        LogError("Error processing page with id:" & pageId & "   " & ex.Message)
+      End Try
+
+    Next 'end page loop
+    totalImgCounter = imgXmlTot.Descendants.Count
+    Dim xmlFolder As String = destDir 
+
+    'be sure it ends with back slash
+    Dim imgFolder As String = destDir 
+
+    If Not FolderExists(destDir, "", "") Then
+      CreateFolder(destDir, "", "", "")
+    End If
+
+    If Not articleIds Is Nothing Then
+      For i = 0 To articleIds.Count - 1
+        Try
+          Dim loadObjectRes As LoadObjectsResult = New LoadObjectsResult
+          Try
+            Dim loadObject As LoadObjects = New LoadObjects(Context) With {.Name = "load object", .Description = "Loading article [id:" & articleIds(i).ToString() & "]"}
+            loadObject.ObjectIds.Add(articleIds(i))
+            loadObject.Encoding = "US-ASCII"
+            loadObject.NavOptions = GNClient.DataNavigatorOption.Default Or GNClient.DataNavigatorOption.Referencing
+            loadObject.XsltConfigName = "article2CosMos"
+            loadObjectRes = loadObject.Do()
+
+          Catch ex As Exception
+            LogError("Error loading article with id: " & articleIds(i) & " .. " & ex.Message)
+          End Try
+
+          Dim loadObjectResXml As XDocument = loadObjectRes.XmlOut
+          Dim saveXmlActRes As SaveXmlResult = New SaveXmlResult
+          Try
+           
+            Dim saveXmlAct As SaveXml = New SaveXml(Context) With {.Name = "Saving article [id:" & articleIds(i).ToString() & "] to ..."}
+            saveXmlAct.XmlIn = loadObjectRes.XmlOut
+            saveXmlAct.Encoding = "UTF-8"
+            saveXmlActRes = saveXmlAct.Do()
+
+          Catch ex As Exception
+            LogError("Error savexml id: " & articleIds(i) & "  " & ex.Message)
+          End Try
+
+          Dim fname As String = loadObjectResXml.Root.@artId
+          Dim strTitle as String = loadObjectResXml.Root.@Title
+          Dim sname As String = strTitle & "--" & fname         
+          Dim saveAct As Save = New Save(Context) With {.Name = "  ..." & sname & ".xml"}
+          saveAct.Data = saveXmlActRes.DataOut
+          saveAct.Mode = Save.SaveMode.Overwrite
+          saveAct.To = xmlFolder & sname & ".xml"
+          saveAct.Do()
+          articleCounter = articleCounter + 1
+
+        Catch ex As Exception
+          LogWarning("Error processing article with id: " & articleIds(i) & ". " & ex.Message)
+        End Try
+
+      Next
+      totalArtCounter = totalArtCounter + articleIds.Count
+
+    End If
+
+    For Each img As XElement In imgXmlTot.DescendantNodes
+      Try
+      
+        Dim objId As String
+        Dim imageBinaryKind As String = "low"
+        If img.@sourceImageId <> "" Then
+          objId = img.@sourceImageId.Replace("obj", "")
+          imageBinaryKind = "data"
+        Else
+          objId = img.@id.Replace("obj", "")
+        End If
+        'logwarning( "imgid [id:" & objId & "]")
+        'load and export the image (original if found)
+
+        Dim loadImgData As LoadData = New LoadData(Context) With {.Name = "Loading image [id:" & objId & "]"}
+        loadImgData.ObjectIds.Add(CInt(objId))
+        loadImgData.AttributeName = imageBinaryKind
+        loadImgData.SrcPaths = New List(Of String)({img.@name})
+        Dim loadImgres As LoadDataResult = loadImgData.Do()
+        Dim imgData As Workflow.IActivityData
+        Try
+          imgData = loadImgres.DataOut(0)
+        Catch ex As Exception
+          LogWarning("Could not load the datafile [" & imageBinaryKind & "] for the image [" & img.@name & "], maybe DUMMY? Skipped [id:" & objId & "]")
+          Continue For
+        End Try
+        If img.@sourceImageId = "" Then
+          Try
+            imgData = ConvertToJPEG(imgData)
+            imgData = ConvertToRGB(imgData)
+          Catch ex As Exception
+            LogWarning("Could not convert to RGB the pic [id:" & objId & "]")
+          End Try
+        End If
+
+        Try
+          Dim saveImage As Save = New Save(Context) With {
+              .Name = "Save image",
+              .Data = imgData,
+              .To = imgFolder & img.@name,
+              .Mode = Save.SaveMode.Overwrite}
+          saveImage.Do()
+        Catch ex As Exception
+          LogWarning("Failed to save the file:" & imgFolder & img.@name & ". Exception: " & ex.Message)
+        End Try
+        '
+        'load and export the thumbnail
+
+        'Dim loadThumbData As LoadData = New LoadData(Context) With {.Name = "Load image thumbnail"}
+        'loadThumbData.ObjectIds.Add(CInt(objId))
+        'loadThumbData.AttributeName = "thumbnail"
+        'loadThumbData.SrcPaths = New List(Of String)({img.@thumbName})
+        'Dim loadThumbDataRes As LoadDataResult = loadThumbData.Do()
+        '
+        'Try
+        '  Dim saveThumb As Save = New Save(Context) With {
+        '      .Name = "Save image",
+        '      .Data = loadThumbDataRes.DataOut(0),
+        '      .To = imgFolder & img.@thumbName,
+        '      .Mode = Save.SaveMode.Overwrite}
+        '  saveThumb.Do()
+        'Catch ex As Exception
+        '  LogWarning("Failed to save the thumb file:" & imgFolder & img.@thumbName & ". Exception: " & ex.Message)
+        'End Try
+        imgCounter = imgCounter + 1
+      Catch ex As Exception
+        LogError("Error loading the image: " & img.@id & " .." & ex.Message)
+      End Try
+
+    Next
+
+
+
+
+    If articleCounter <> totalArtCounter Then LogWarning("WARNING! ONLY " & articleCounter.ToString() & " ARTICLES out of " & totalArtCounter & " have been succesfully processed")
+    If articleCounter = totalArtCounter Then LogInfo("SUCCESS! " & articleCounter.ToString() & "/" & totalArtCounter & " ARTICLES have been succesfully processed")
+
+    If imgCounter <> totalImgCounter Then LogWarning("WARNING! ONLY " & imgCounter.ToString() & " IMAGES out of " & totalImgCounter & " have been succesfully processed")
+    If imgCounter = totalImgCounter Then LogInfo("SUCCESS! " & imgCounter.ToString() & "/" & totalImgCounter & " IMAGES have been succesfully processed")
+
+    If pageCounter <> searchPagesRes.IdsCount Then LogWarning("WARNING! ONLY " & pageCounter.ToString() & " PAGES out of " & searchPagesRes.IdsCount.ToString() & " have been succesfully processed")
+    If pageCounter = searchPagesRes.IdsCount Then LogInfo("SUCCESS! " & pageCounter.ToString() & "/" & searchPagesRes.IdsCount & " PAGES have been succesfully processed.")
+]]></Sequential></codeWorkflow></xml></data></config></xml></data></config>
