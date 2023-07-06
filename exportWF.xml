@@ -1,4 +1,26 @@
-﻿<?xml version="1.0" encoding="utf-8"?><config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="obj28511864" name="wf_export2Cosmos_test" modifiedDate="2023-04-11T08:33:42.427Z" xmlns="urn:schemas-teradp-com:gn4tera"><scopeRef idref="obj12" /><data id="data54671420" mime="application/xml" size="30004"><xml>﻿<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="wf_export2CosMos_test" modifiedDate="2018-10-10T16:55:03.620Z" xmlns="urn:schemas-teradp-com:gn4tera"><scopeRef idref="obj12" /><data id="data3413383" mime="application/xml" size="29750"><xml>﻿<codeWorkflow xmlns="http://www.teradp.com/schemas/GN4/1/WFRes.xsd"><References><Reference>.\GNClient.dll</Reference></References><Imports><Import>System</Import><Import>System.Collections</Import><Import>System.Collections.Generic</Import><Import>System.Diagnostics</Import><Import>System.Linq</Import><Import>System.Threading.Tasks</Import><Import>System.Xml</Import><Import>System.Xml.Linq</Import><Import>System.Xml.XPath</Import><Import>System.Xml.Xsl</Import><Import>System.Net</Import><Import>System.String</Import><Import>TeraDP.GN4</Import><Import>TeraDP.GN4.Common</Import><Import>TeraDP.GN4.Schema.Class</Import></Imports><Members><![CDATA[
+<codeWorkflow xmlns="http://www.teradp.com/schemas/GN4/1/WFRes.xsd">
+							<References>
+								<Reference>.\GNClient.dll</Reference>
+							</References>
+							<Imports>
+								<Import>System</Import>
+								<Import>System.Collections</Import>
+								<Import>System.Collections.Generic</Import>
+								<Import>System.Diagnostics</Import>
+								<Import>System.Linq</Import>
+								<Import>System.Threading.Tasks</Import>
+								<Import>System.Xml</Import>
+								<Import>System.Xml.Linq</Import>
+								<Import>System.Xml.XPath</Import>
+								<Import>System.Xml.Xsl</Import>
+								<Import>System.Net</Import>
+								<Import>System.String</Import>
+								<Import>TeraDP.GN4</Import>
+								<Import>TeraDP.GN4.Common</Import>
+								<Import>TeraDP.GN4.Schema.Class</Import>
+							</Imports>
+							<Members>
+								<![CDATA[
 Dim loadFileNames As XElement = <root xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
                                     <xsl:variable name="edition" select="gn4:editionRef/nav:refObject/gn4:edition"/>
                                     <xsl:variable name="prefix" select="concat($edition/gn4:titleRef/nav:refObject/gn4:title/@name,fn:formatDateTime(fn:fromUTCToClientLocalTime($edition/@date,$context/lc:LoginContext/@ClientTimeZoneId),'yyMMdd'))"/>
@@ -307,7 +329,10 @@ Dim loadFileNames As XElement = <root xmlns:xsl="http://www.w3.org/1999/XSL/Tran
     strClean = outputStr
 
   End Function
-]]></Members><Sequential DisplayProgress="true"><![CDATA[
+]]>
+							</Members>
+							<Sequential DisplayProgress="true">
+								<![CDATA[
 'check parameters
     Dim strCheck As String = ""
 
@@ -571,4 +596,6 @@ Dim loadFileNames As XElement = <root xmlns:xsl="http://www.w3.org/1999/XSL/Tran
 
     If pageCounter <> searchPagesRes.IdsCount Then LogWarning("WARNING! ONLY " & pageCounter.ToString() & " PAGES out of " & searchPagesRes.IdsCount.ToString() & " have been succesfully processed")
     If pageCounter = searchPagesRes.IdsCount Then LogInfo("SUCCESS! " & pageCounter.ToString() & "/" & searchPagesRes.IdsCount & " PAGES have been succesfully processed.")
-]]></Sequential></codeWorkflow></xml></data></config></xml></data></config>
+]]>
+							</Sequential>
+						</codeWorkflow>
