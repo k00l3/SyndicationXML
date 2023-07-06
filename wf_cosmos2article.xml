@@ -1,0 +1,825 @@
+<codeWorkflow xmlns="http://www.teradp.com/schemas/GN4/1/WFRes.xsd">
+  <References>
+    <Reference>GNClient.dll</Reference>
+    <Reference>Client.dll</Reference>
+    <Reference>Editorial.dll</Reference>
+    <Reference>EditorialServer.dll</Reference>
+    <Reference>EditorialServer.dll</Reference>
+    <Reference>Newtonsoft.Json.dll</Reference>
+  </References>
+  <Imports>
+    <Import>TeraDP.GN4.Editorial</Import>
+    <Import>TeraDP.GN4.EditorialServer</Import>
+    <Import>Newtonsoft.Json</Import>
+    <Import>System.Net</Import>
+    <Import>System.IO</Import>
+    <Import>Newtonsoft.Json.Linq</Import>
+  </Imports>
+  <Members><![CDATA[
+Public Class SingleOrArrayConverter(Of T)
+    Inherits JsonConverter
+
+    Public Overrides Function CanConvert(objectType As Type) As Boolean
+      Return objectType = GetType(List(Of T))
+    End Function
+
+    Public Overrides Function ReadJson(reader As JsonReader, objectType As Type, existingValue As Object, serializer As JsonSerializer) As Object
+      Dim token As JToken = JToken.Load(reader)
+
+      If (token.Type = JTokenType.Array) Then
+        Return token.ToObject(Of List(Of T))()
+      End If
+
+      Return New List(Of T) From {token.ToObject(Of T)()}
+    End Function
+
+    Public Overrides ReadOnly Property CanWrite As Boolean
+      Get
+        Return False
+      End Get
+    End Property
+
+    Public Overrides Sub WriteJson(writer As JsonWriter, value As Object, serializer As JsonSerializer)
+      Throw New NotImplementedException
+    End Sub
+
+  End Class
+
+  Public Class CosmosArticle
+    Public Property push_notify As Boolean
+    Public Property pub_url As String
+    Public Property content_type As String
+    Public Property weight As Integer
+    Public Property title_section As String
+    Public Property count_words As Integer
+    Public Property embedded_articles_list As List(Of String)
+    Public Property author_keys As List(Of String)
+    Public Property count_social As Integer
+    Public Property synopsis_custom As String
+    Public Property images As List(Of CosMosImage)
+    Public Property intro As Object
+    Public Property sponsor As Object
+    Public Property nova_fingerprint As Object
+    Public Property keywords() As List(Of String)
+    Public Property count_embedded_articles As Integer
+    Public Property native As Boolean
+    Public Property style As Object
+    Public Property location_name As Object
+    Public Property publication As Publication
+    Public Property title As String
+    Public Property slug_custom As String
+    Public Property future_publish_date As Object
+    Public Property section As Section
+    Public Property breaking As Boolean
+    Public Property modified_user As String
+    Public Property sponsor_keys As List(Of String)
+    Public Property location_lat As Object
+    Public Property source As Object
+    Public Property state As Object
+    'Public Property version As Integer
+    Public Property comments_enabled As Boolean
+    Public Property title2_text As String
+    Public Property widgets() As List(Of Widget)
+    Public Property show_author_card As Boolean
+    Public Property sections() As List(Of Section1)
+    Public Property subsection As Object
+    Public Property status As String
+    Public Property image_header As Object
+    Public Property updated As Object
+    Public Property location_geo As Object
+    Public Property parent As Object
+    Public Property tags As List(Of String)
+    Public Property count_blockquote As Integer
+    Public Property count_video As Integer
+    Public Property published As String
+    Public Property plain_text As String
+    Public Property ad_tag_custom As Object
+    Public Property title_text As String
+    Public Property title2 As Object
+    Public Property title3 As String
+    Public Property count_image As Integer
+    Public Property title_section_text As String
+    Public Property key As Long
+    Public Property count_infographic As Integer
+    Public Property active As Boolean
+    Public Property print_status As String
+    Public Property slug As String
+    Public Property editors_choice As Boolean
+    Public Property groups As List(Of String)
+    Public Property title_custom As Object
+    Public Property count_audio As Integer
+    Public Property title3_text As String
+    Public Property print_page_no As Integer
+    Public Property print_name As String
+    Public Property print_title As String
+    Public Property print_priority As Integer
+    Public Property authors As List(Of String)
+    Public Property notes As String
+    Public Property author As Object
+    'Public Property companies As List(Of String)
+    Public Property modified As Long
+    Public Property summary As Object
+    Public Property sensitive As Boolean
+    Public Property synopsis As String
+    Public Property slug_old As List(Of String)
+    Public Property image_thumbnail As Image_Thumbnail
+    Public Property read_duration As Integer
+    Public Property created As Long
+    Public Property source_id As Object
+    Public Property location_keywords As Object
+    Public Property external_url As Object
+    Public Property intro_text As String
+    Public Property edit_url As String
+    Public Property related_articles As Object
+  End Class
+
+  Public Class Publication
+    Public Property link As String
+    Public Property id As String
+    Public Property name As String
+    Public Property primary As Boolean
+  End Class
+
+  Public Class Section
+    Public Property link As String
+    Public Property name As String
+    Public Property id As String
+  End Class
+
+  Public Class Image_Thumbnail
+    Public Property palette As List(Of String)
+    Public Property filepath As String
+    Public Property created As Long
+    Public Property blob_path As String
+    Public Property blob_key As String
+    Public Property average As String
+    Public Property author As String
+    Public Property filename As String
+    Public Property width As Integer
+    Public Property state As Object
+    'Public Property version As Integer
+    Public Property focal_y As Single
+    Public Property focal_x As Single
+    Public Property content_type As String
+    Public Property blur As String
+    Public Property keywords() As Object
+    Public Property title As String
+    Public Property height As Integer
+    Public Property description As String
+  End Class
+
+  Public Class CosMosImage
+    Public Property palette As List(Of String)
+    Public Property author As String
+    Public Property created As Long
+    Public Property blob_path As String
+    Public Property blob_key As String
+    Public Property average As String
+    Public Property filepath As String
+    Public Property filename As String
+    Public Property fingerprint As String
+    Public Property width As Integer
+    Public Property state As String
+    'Public Property version As Integer
+    Public Property focal_y As Single
+    Public Property focal_x As Single
+    Public Property content_type As String
+    Public Property blur As String
+    Public Property keywords() As Object
+    Public Property title As String
+    Public Property height As Integer
+    Public Property description As String
+    Public Property key As String
+    Public Property ref As String
+  End Class
+
+  Public Class Widget
+    Public Property data As Data
+    Public Property type As String
+    Public Property id As String
+  End Class
+
+  Public Class Data
+    Public Property image As Image1
+    Public Property id As String
+    Public Property text As String
+    Public Property html As String
+    Public Property clean As String
+    Public Property float As String
+  End Class
+
+  Public Class Image1
+    Public Property palette() As List(Of String)
+    Public Property description As String
+    Public Property created As Long
+    Public Property blob_path As String
+    Public Property blob_key As String
+    Public Property average As String
+    Public Property author As String
+    Public Property filename As String
+    Public Property filepath As String
+    Public Property fingerprint As String
+    Public Property width As Integer
+    Public Property state As String
+    'Public Property version As Integer
+    Public Property focal_y As Single
+    Public Property focal_x As Single
+    Public Property key As String
+    Public Property blur As String
+    Public Property keywords As Object
+    Public Property title As String
+    Public Property height As Integer
+    Public Property ref As String
+    Public Property content_type As String
+  End Class
+
+  Public Class Section1
+    Public Property section As String
+    Public Property subsection As Object
+    Public Property primary As Boolean
+    Public Property publication As String
+  End Class
+
+  Dim htmlTotXslt As XElement = <xsl:stylesheet
+                                  exclude-result-prefixes="t lc oc fn nav gn4 msxsl"
+                                  version="1.0"
+                                  xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                                  xmlns:t="http://www.teradp.com/schemas/GN3/t.xsd"
+                                  xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                                  xmlns:lc="http://www.teradp.com/schemas/GN4/1/LoginContext.xsd"
+                                  xmlns:oc="http://www.teradp.com/schemas/GN4/1/OperationContext.xsd"
+                                  xmlns:fn="http://www.teradp.com/schemas/GN4/1/Xslt"
+                                  xmlns:nav="http://www.teradp.com/schemas/GN4/1/ObjNav.xsd"
+                                  xmlns:msxsl="urn:schemas-microsoft-com:xslt"
+                                  xmlns:gn4="urn:schemas-teradp-com:gn4tera">
+
+                                  <!-- Common parameters -->
+                                  <xsl:param name="context"/>
+                                  <xsl:param name="pars"/>
+
+                                  <!--
+            ===========================================================================
+            Templates converting (X)HTML into 't' format
+            ===========================================================================
+          -->
+
+                                  <!--
+            multiReplace: replaces in sequence a list of regular expression patterns with 
+            a list of replacement strings
+          -->
+                                  <xsl:template name="multiReplace">
+                                    <xsl:param name="string"/>
+                                    <xsl:param name="replacements"/>
+                                    <xsl:variable name="replacementSet" select="msxsl:node-set($replacements)"/>
+                                    <xsl:choose>
+                                      <xsl:when test="not($replacementSet/*)">
+                                        <xsl:value-of select="$string"/>
+                                      </xsl:when>
+                                      <xsl:otherwise>
+                                        <xsl:variable name="firstReplacement" select="$replacementSet/*[1]"/>
+                                        <xsl:call-template name="multiReplace">
+                                          <xsl:with-param name="string" select="fn:replace($string,$firstReplacement/@p,$firstReplacement/@r)"/>
+                                          <xsl:with-param name="replacements">
+                                            <xsl:copy-of select="$replacementSet/*[position()&gt;1]"/>
+                                          </xsl:with-param>
+                                        </xsl:call-template>
+                                      </xsl:otherwise>
+                                    </xsl:choose>
+                                  </xsl:template>
+
+                                  <!--
+            Text template: fix quotes and other characters
+            
+            Each 'r' element is a replacement, it has two attributes:
+              - p: the regular expression pattern to search;
+              - r: the replacement string
+          -->
+                                  <xsl:template match="text()" mode="xhtml">
+                                    <xsl:call-template name="multiReplace">
+                                      <xsl:with-param name="string" select="."/>
+                                      <xsl:with-param name="replacements">
+                                        <!-- FIX DOUBLE HYPHENS TO DASHES -->
+                                        <r p="\-\-" r="–"/>
+                                        <!-- FIX 09 TO NOTHING -->
+                                        <r p="\&#009;" r=""/>
+                                        <!--  REMOVE ERRANT CHARACTER 160 -->
+                                        <r p="\&#160;" r=" "/>
+                                        <!-- CHANGE 2 SINGLE QUOTES to DOUBLE QUOTE -->
+                                        <r p="\'\'" r="&quot;"/>
+                                        <!--  CHANGE SPACE SINGLE QUOTE to SPACE OPEN SINGLE QUOTE -->
+                                        <r p="\ \'" r=" ‘"/>
+                                        <!--  FIX QUOTE AFTER EXCLAMATION -->
+                                        <r p="\!\&quot;" r="!”"/>
+                                        <!--  FIX QUOTE AFTER COMMA -->
+                                        <r p="\,\&quot;" r=",”"/>
+                                        <!--  FIX QUOTES -->
+                                        <r p="\&quot;\." r=".“"/>
+                                        <!-- REPLACE ?, with ? -->'
+                <r p="\?\," r="?"/>
+                                        <!-- REPLACE ?. with ? -->'
+                <r p="\?\." r="?"/>
+                                        <!-- REPLACE DOUBLE QUOTE with OPEN DOUBLE QUOTE -->
+                                        <r p="\&quot;" r="“"/>
+                                        <!-- REPLACE OPEN DOUBLE QUOTE  &  SPACE with CLOSED DOUBLE QUOTE  &  SPACE -->
+                                        <r p="\“\ " r="” "/>
+                                        <!-- REPLACE PERIOD & OPEN DOUBLE QUOTE with PERIOD & OPEN CLOSED QUOTE -->
+                                        <r p="\.\“" r=".”"/>
+                                        <!-- REPLACE SPACE & CLOSED SINGLE QUOTE with SPACE & OPEN SINGLE QUOTE -->
+                                        <r p="\ \’" r=" ‘"/>
+                                        <!-- REPLACE SINGLE QUOTE with SINGLE CLOSED QUOTE -->
+                                        <r p="\'" r="’"/>
+                                        <!-- REPLACE OPEN PARENTHESIS & SINGLE QUOTE with OPEN PARENTHESIS & SINGLE OPEN QUOTE -->
+                                        <r p="\(\'" r="(‘"/>
+                                        <!-- REPLACE OPEN PARENTHESIS & DOUBLE QUOTE with OPEN PARENTHESIS & DOUBLE OPEN QUOTE -->
+                                        <r p="\(\&quot;" r="(“"/>
+                                        <!-- REPLACE DOUBLE OPEN QUOTE & CLOSED PARENTHESIS with DOUBLE CLOSED QUOTE & CLOSED PARENTHESIS -->
+                                        <r p="\“\)" r="”)"/>
+                                        <!-- REPLACE DOUBLE OPEN QUOTE & '?' with DOUBLE CLOSED QUOTE & '?' -->
+                                        <r p="\“\?" r="”?"/>
+                                        <r p="\?\“" r="?”"/>
+                                        <!-- REPLACE 0d0a INTO NOTHING TO AVOID UNACCEPTED CHARS FOR TED-->
+                                        <r p="\r\n" r=""/>
+                                      </xsl:with-param>
+                                    </xsl:call-template>
+                                  </xsl:template>
+                                  <xsl:template match="byline" mode="xhtml">
+                                    <t:tag n="byline"/>
+                                    <xsl:apply-templates mode="xhtml"/>
+                                  </xsl:template>
+                                  <xsl:template match="strong|STRONG|xhtml:strong" mode="xhtml">
+                                    <t:tag n="bd"/>
+                                    <xsl:apply-templates mode="xhtml"/>
+                                    <t:tag n="bd" p0="0"/>
+                                  </xsl:template>
+
+                                  <xsl:template match="em|EM|xhtml:em" mode="xhtml">
+                                    <t:tag n="it"/>
+                                    <xsl:apply-templates mode="xhtml"/>
+                                    <t:tag n="it" p0="0"/>
+                                  </xsl:template>
+
+                                  <xsl:template match="u|U|xhtml:u" mode="xhtml">
+                                    <t:tag n="under" p0="1pt,0.5pt"/>
+                                    <xsl:apply-templates mode="xhtml"/>
+                                    <t:tag n="under" p0="0"/>
+                                  </xsl:template>
+
+                                  <xsl:template match="span|xhtml:span" mode="xhtml">
+                                    <xsl:if test="contains(@style,'font-weight:bold;')">
+                                      <t:tag n="bd"/>
+                                    </xsl:if>
+                                    <xsl:if test="contains(@style,'font-style:italic;')">
+                                      <t:tag n="it"/>
+                                    </xsl:if>
+                                    <xsl:if test="contains(@style,'text-decoration:underline;')">
+                                      <t:tag n="under" p0="1pt,0.5pt"/>
+                                    </xsl:if>
+                                    <xsl:apply-templates mode="xhtml"/>
+                                    <xsl:if test="contains(@style,'text-decoration:underline;')">
+                                      <t:tag n="under" p0="0"/>
+                                    </xsl:if>
+                                    <xsl:if test="contains(@style,'font-style:italic;')">
+                                      <t:tag n="it" p0="0"/>
+                                    </xsl:if>
+                                    <xsl:if test="contains(@style,'font-weight:bold;')">
+                                      <t:tag n="bd" p0="0"/>
+                                    </xsl:if>
+                                  </xsl:template>
+
+                                  <xsl:template match="br|BR|xhtml:br" mode="xhtml">
+                                    <t:br/>
+                                  </xsl:template>
+
+                                  <xsl:template match="p|P|xhtml:p|div|DIV|xhtml:div|h1|H1|xhtml:h1|h2|H2|xhtml:h2|h3|H3|xhtml:h3" mode="xhtml">
+                                    <!-- ATTENTION the following <t:p.. must be on one line due to the preserve space attribute, hence do not split on more lines and do not indent -->
+                                    <t:p xml:space="preserve"><xsl:apply-templates mode="xhtml"/></t:p>
+                                  </xsl:template>
+
+                                  <xsl:template match="td|TD|xhtml:td|th|TH|xhtml:th" mode="xhtml">
+                                    <t:td>
+                                      <xsl:apply-templates mode="xhtml"/>
+                                    </t:td>
+                                  </xsl:template>
+
+                                  <xsl:template match="tr|TR|xhtml:tr" mode="xhtml">
+                                    <t:tr>
+                                      <xsl:apply-templates mode="xhtml"/>
+                                    </t:tr>
+                                  </xsl:template>
+
+                                  <xsl:template match="table|TABLE|xhtml:table" mode="xhtml">
+                                    <t:p>
+                                      <xsl:for-each select="tr[1]/td|tbody/tr[1]/td|xhtml:tr[1]/xhtml:td|xhtml:tbody/xhtml:tr[1]/xhtml:td|tr[1]/th|tbody/tr[1]/th|xhtml:tr[1]/xhtml:th|xhtml:tbody/xhtml:tr[1]/xhtml:th">
+                                        <t:tag n="t" p0="80000m"/>
+                                      </xsl:for-each>
+                                      <t:tag n="defrow" p0="0"/>
+                                      <t:tag n="defcell" p0="0"/>
+                                    </t:p>
+                                    <xsl:apply-templates mode="xhtml"/>
+                                    <t:p>
+                                      <t:tag n="endtab"/>
+                                    </t:p>
+                                  </xsl:template>
+
+                                  <xsl:template name="firstLevel">
+                                    <xsl:param name="nodes"/>
+                                    <xsl:variable name="nodesParentFragment">
+                                      <xsl:copy-of select="$nodes"/>
+                                    </xsl:variable>
+                                    <xsl:variable name="nodesParent" select="msxsl:node-set($nodesParentFragment)"/>
+                                    <xsl:variable name="paras" select="$nodesParent/p|$nodesParent/P|$nodesParent/xhtml:p|$nodesParent/div|$nodesParent/DIV|$nodesParent/xhtml:div|$nodesParent/h1|$nodesParent/H1|$nodesParent/xhtml:h1|$nodesParent/h2|$nodesParent/H2|$nodesParent/xhtml:h2|$nodesParent/h3|$nodesParent/H3|$nodesParent/xhtml:h3|$nodesParent/table|$nodesParent/TABLE|$nodesParent/xhtml:table|$nodesParent/br|$nodesParent/BR|$nodesParent/xhtml:br|$nodesParent/pre|$nodesParent/PRE|$nodesParent/xhtml:pre"/>
+                                    <xsl:choose>
+                                      <xsl:when test="$paras">
+                                        <xsl:variable name="firstPara" select="$paras[1]"/>
+                                        <xsl:if test="$firstPara/preceding-sibling::node()">
+                                          <t:p>
+                                            <xsl:apply-templates select="$firstPara/preceding-sibling::node()" mode="xhtml"/>
+                                          </t:p>
+                                        </xsl:if>
+                                        <xsl:if test="local-name($firstPara)!='br' and local-name($firstPara)!='BR'">
+                                          <xsl:apply-templates select="$firstPara/self::node()" mode="xhtml"/>
+                                        </xsl:if>
+                                        <xsl:call-template name="firstLevel">
+                                          <xsl:with-param name="nodes" select="$firstPara/following-sibling::node()"/>
+                                        </xsl:call-template>
+                                      </xsl:when>
+                                      <xsl:otherwise>
+                                        <xsl:if test="$nodes">
+                                          <t:p>
+                                            <xsl:apply-templates select="$nodes" mode="xhtml"/>
+                                          </t:p>
+                                        </xsl:if>
+                                      </xsl:otherwise>
+                                    </xsl:choose>
+                                  </xsl:template>
+
+                                  <xsl:template name="htmlToT">
+                                    <xsl:param name="html"/>
+                                    <xsl:variable name="body" select="$html//body|$html//BODY|$html//xhtml:body"/>
+                                    <xsl:choose>
+                                      <xsl:when test="$body/node()">
+                                        <xsl:call-template name="firstLevel">
+                                          <xsl:with-param name="nodes" select="$body/node()"/>
+                                        </xsl:call-template>
+                                      </xsl:when>
+                                      <xsl:otherwise>
+                                        <xsl:call-template name="firstLevel">
+                                          <xsl:with-param name="nodes" select="$html/node()"/>
+                                        </xsl:call-template>
+                                      </xsl:otherwise>
+                                    </xsl:choose>
+                                  </xsl:template>
+
+                                  <!--
+            ===========================================================================
+            Root template
+            ===========================================================================
+          -->
+                                  <xsl:template match="/*">
+                                    <t:t>
+                                      <xsl:call-template name="htmlToT">
+                                        <xsl:with-param name="html" select="."/>
+                                      </xsl:call-template>
+                                    </t:t>
+                                  </xsl:template>
+
+                                </xsl:stylesheet>
+
+
+
+  Function createTxtElement(type As String, folderPath As String, content As String) As XElement
+    createTxtElement = Nothing
+    If content <> "" Then
+      content = content.Replace("&", "&amp;")
+      content = content.Replace(">", "&gt;")
+      content = content.Replace("<", "&lt;")
+      createTxtElement = XElement.Parse("<" & type & " name='" & Guid.NewGuid.ToString() & "'><folderRef><keyVal>" & folderPath & "</keyVal></folderRef><tText><t:t xml:space='preserve' xmlns:t='http://www.teradp.com/schemas/GN3/t.xsd'><t:p>" & content & "</t:p></t:t></tText></" & type & ">")
+    End If
+  End Function
+
+  Function CreateEmptyImage(createEditorialImage As Boolean, cropName As String, folderId As Integer) As Integer
+    If folderId = 0 Then Return 0 'nothing to do
+    If String.IsNullOrEmpty(cropName) Then
+      cropName = Guid.NewGuid.ToString("N")
+    End If
+
+    'if there is a valid output folder, then...
+    Dim xData As XElement = Nothing
+    If createEditorialImage Then
+      'if the source image is an editorial image or the caller is a editorial system, then...
+      xData =
+<gn4:img xmlns:gn4="urn:schemas-teradp-com:gn4tera" name=<%= cropName %>>
+  <gn4:folderRef idref=<%= Context.XsltExtensions.objectIdToString(folderId) %>/>
+</gn4:img>
+    Else
+      'if the caller is a tark system, then...
+      xData =
+<gn4:image xmlns:gn4="urn:schemas-teradp-com:gn4tera" name=<%= cropName %>>
+  <gn4:folderRef idref=<%= Context.XsltExtensions.objectIdToString(folderId) %>/>
+</gn4:image>
+    End If
+
+    Dim createEmptyAct As ImportXml = New ImportXml(Context) _
+    With {.Name = "create empty", .Description = "creating empty image..."}
+    createEmptyAct.XmlIn = New XDocument(xData)
+    Dim createEmptyRes As ImportXmlResult = createEmptyAct.Do()
+    If createEmptyRes.IdsOut.Count > 0 Then
+      Return createEmptyRes.IdsOut(0)
+    End If
+    Return 0
+  End Function
+
+  Function SearchIdFromAttribute(objectType As String, attribName As String, attribValue As String) As Integer
+    Try
+      Dim searchAct As Search = New Search(Context) With {.Name = "Get the id of " & objectType & " with " & attribName & "=" & attribValue}
+      searchAct.Pars.Add("value", attribValue)
+      searchAct.XQuery = String.Format("gn4:{0}[{1}=$value]", objectType, attribName)
+      Dim searchResAct As SearchResult = searchAct.Do()
+      SearchIdFromAttribute = searchResAct.IdsOut.FirstOrDefault
+    Catch ex As Exception
+      Utils.LogWarning("Failed getting the id of " & objectType & " with " & attribName & "=" & attribValue & ":" & ex.Message)
+      Return 0
+      Exit Function
+    End Try
+  End Function
+
+
+  Function createPhotoCaptionElement(imageObj As CosMosImage, folderPath As String, imgFolderPath As String, imgFolderId As Integer, extractDestId As Integer) As XElement
+    createPhotoCaptionElement = Nothing
+    Dim imgId As Integer = 0
+    Dim imageId As String = ""
+
+    Try
+      imageId = imageObj.fingerprint.Substring(5)
+      Dim checkImageAct As CheckIds = New CheckIds(Context) With {.Name = "Check image kind in gn4 [id:" & imageId}
+      checkImageAct.ObjectIds.Add(Integer.Parse(imageId))
+      Dim checkImageResAct As CheckIdsResult = checkImageAct.Do()
+      'if image object type is found, convert to editorial image using the assetToEditorialWf
+      If Not checkImageResAct.ObjectTypeName = "image" Then
+        Utils.LogWarning("Image with id:" & imageId & " is not a wire or archive image")
+        Exit Function
+      End If
+      'get the source image pixels size to do a full size crop
+      Dim imgPixWidth As String = ""
+      Dim imgPixHeight As String = ""
+      Dim loadObjectsRes As LoadObjectsResult = Nothing
+      Dim loadObjectsAct As LoadObjects = New LoadObjects(Context) With {.Name = "loadObjects", .Description = "Loading object(s)"}
+      loadObjectsAct.ObjectIds.Add(Integer.Parse(imageId))
+      loadObjectsAct.Xslt = <image pixWidth="{@pixWidth}" pixHeight="{@pixHeight}"/>
+      Try
+        loadObjectsRes = loadObjectsAct.Do()
+        imgPixWidth = loadObjectsRes.XmlOut.Root.@pixWidth
+        imgPixHeight = loadObjectsRes.XmlOut.Root.@pixHeight
+      Catch ex As Exception
+        Utils.LogWarning("Failed to load image with id:" & imageId & ":" & ex.Message)
+        Exit Function
+      End Try
+
+
+
+      '      Try
+      '      Dim searchFolderAct As Search = New Search(Context) With {.Name = "get the target folderId"}
+      '      searchFolderAct.Pars.Add("folderPath", imgFolderPath)
+      '      searchFolderAct.XQuery = "gn4:folder[@path=$folderPath]"
+      '      Dim searchFolderResAct As SearchResult = searchFolderAct.Do()
+      '      folderId = searchFolderResAct.IdsOut.FirstOrDefault
+      '    Catch ex As Exception
+      '      Utils.LogWarning("Failed to load folder with path:" & imgFolderPath & ":" & ex.Message)
+      '      Exit Function
+      '    End Try
+      'create a dummy pic to be replaced by the cropBatch wf
+      imgId = CreateEmptyImage(True, Utils.ReplaceFileIllegal(imageObj.title,"_") & "_" & imageId, imgFolderId)
+      If imgId = 0 Then
+        Utils.LogWarning("Failed to create dummypic for image with id:" & imageId)
+        Exit Function
+      End If
+      'execute the cropping operation
+      Dim executeCropAct As ExecuteSequentialWorkflow = New ExecuteSequentialWorkflow(Context) With {.Name = "execute crop"}
+      executeCropAct.WorkflowName = "CropBatch"
+      executeCropAct.ObjectIds.Add(Integer.Parse(imageId))
+      executeCropAct.Pars.Add("destId", extractDestId)
+      executeCropAct.Pars.Add("vertexes", String.Format("0;0;{0};{1};", imgPixWidth, imgPixHeight))
+      executeCropAct.Pars.Add("cropName", Utils.ReplaceFileIllegal(imageObj.title,"_") & "_" & imageId)
+      executeCropAct.Pars.Add("folderId", imgFolderId)
+      executeCropAct.Pars.Add("dummyId", imgId)
+      executeCropAct.Pars.Add("watermark", "true")
+      executeCropAct.Pars.Add("caller", "win")
+      executeCropAct.Pars.Add("importPath", imgFolderPath)
+      Dim executeCropRes As ExecuteSequentialWorkflowResult = executeCropAct.Do()
+      createPhotoCaptionElement = <photoCaption name=<%= Guid.NewGuid.ToString() %>>
+                                    <folderRef><keyVal><%= folderPath %></keyVal></folderRef>
+                                    <tText>
+                                      <t:t xml:space="preserve" xmlns:t="http://www.teradp.com/schemas/GN3/t.xsd">
+                                        <t:p><t:tag n="caption"/><%= imageObj.description %></t:p>
+                                        <t:p><t:tag n="credit"/><%= imageObj.author %></t:p>
+                                      </t:t>
+                                    </tText>
+                                    <ref idref=<%= "obj" & imgId %>/>
+                                  </photoCaption>
+
+    Catch ex As Exception
+      Utils.LogWarning(ex.Message)
+    End Try
+  End Function
+  Sub SaveFile(data As TeraDP.GN4.Workflow.IActivityData, filePath As String, quiet As Boolean)
+    If data Is Nothing Or String.IsNullOrEmpty(filePath) Then Return 'nothing to do
+    Try
+      Dim saveAct As Save = New Save(Context) With {.Name = "save file"}
+      saveAct.Data = data
+      saveAct.To = filePath
+      saveAct.Mode = Save.SaveMode.Unique
+      Dim saveRes As SaveResult = saveAct.Do()
+    Catch ex As Exception 'continue with no error
+      If quiet Then 'continue with no error
+        Utils.LogWarning(String.Format("Cannot save file '{0}': {1}", filePath, ex.Message))
+      Else
+        Throw ex
+      End If
+    End Try
+  End Sub
+  ''' <summary>Replace the non ASCII characters with their xml entities</summary>
+  ''' <param name="str">The string to process</param>
+  ''' <returns>The xml string</returns>
+  Function StringToXml(str As String) As String
+    If String.IsNullOrEmpty(str) Then
+      Return ""
+    End If
+
+    Dim converted As String = ""
+    For Each c As String In str
+      Dim nInt As Integer = AscW(c)
+      If nInt > 127 Then
+        converted += "&#" + nInt.ToString() + ";"
+      Else
+        converted += c
+      End If
+    Next
+    Return converted
+  End Function
+]]></Members>
+  <Sequential DisplayProgress="true"><![CDATA[
+If Context.Data.Count <> 1 Then
+      Utils.LogError("Please POST something")
+      Return
+    End If
+    Dim folderPath As String = Context.ParValue("folderPath")
+    If String.IsNullOrEmpty(folderPath) Then
+      Utils.LogError("Please specify the 'folderPath' parameter")
+      Return
+    End If
+    Dim imgFolderPath As String = Context.ParValue("imgFolderPath")
+    If String.IsNullOrEmpty(imgFolderPath) Then imgFolderPath = Context.LoginContext.ParValue("imgFolderPath")
+    If String.IsNullOrEmpty(imgFolderPath) Then
+      Utils.LogError("Please specify the 'imgFolderPath' parameter in the user [" & Context.LoginContext.UserName & "] properties, or pass it via pars=")
+      Return
+    End If
+    Dim extractDestName As String = Context.ParValue("extractDestName")
+    If String.IsNullOrEmpty(extractDestName) Then extractDestName = Context.LoginContext.ParValue("extractDestName")
+    If String.IsNullOrEmpty(extractDestName) Then
+      Utils.LogError("Please specify the 'extractDestName' parameter in the user [" & Context.LoginContext.UserName & "] properties, or pass it via pars=")
+      Return
+    End If
+
+    'get the folderId from the imgFolderPath
+    Dim imgFolderId As Integer = SearchIdFromAttribute("folder", "@path", imgFolderPath)
+    Dim extractDestId As Integer = SearchIdFromAttribute("extractDest", "@name", extractDestName)
+
+    Dim strDebugFileName = "c:\temp\" & System.DateTime.Now.ToString("yyyyMMdd-HHmmss") & ".json"
+    Try
+      'debug: save the posted json to c:\temp\ on the server
+      SaveFile(Context.Data(0), strDebugFileName, False)
+      Dim loadPostData As LoadXml = New LoadXml(Context) With {.Name = "Load posted data"}
+      loadPostData.Data = Context.Data(0)
+      loadPostData.FromText = True
+      loadPostData.Encoding = "UTF-8"
+      Dim loadPostDataRes As LoadXmlResult = loadPostData.Do()
+      Dim xmlPostedData As XDocument = loadPostDataRes.XmlOut
+      'debug
+      xmlPostedData.Save(strDebugFileName & "_2xml.xml")
+      Dim strPostArticle As String = xmlPostedData.GetXmlDocument.InnerText '.Trim(New Char() {"["c, "]"c, " "c})
+      ' strPostArticle = "[" & strPostArticle & "]" 'System.IO.File.WriteAllText("c:\temp\postdata\text.txt", strPostArticle)
+      Dim CosmosArticles As List(Of CosmosArticle)
+      ' CosmosArticles = JsonConvert.DeserializeObject(Of CosmosArticle)(strPostArticle)
+      CosmosArticles = JsonConvert.DeserializeObject(Of List(Of CosmosArticle))(strPostArticle)
+      'Utils.LogError(CosmosArticles.Count & " cosmos articles found")
+      For Each CosmosArticle In CosmosArticles
+        Dim articleName As String = Context.XsltExtensions.trimText(CosmosArticle.print_name, 80, " ", "...")
+        If articleName = "" Then
+          Utils.LogWarning("No article.slug found, using the print_title, instead")
+          articleName = Context.XsltExtensions.trimText(CosmosArticle.print_title, 80, " ", "...")
+        End If
+        If articleName = "" Then
+          Utils.LogWarning("Article.slug nor the print_title found, using title,instead")
+          articleName = Context.XsltExtensions.trimText(CosmosArticle.title, 80, " ", "...")
+        End If
+        If articleName = "" Then
+          Utils.LogWarning("Article.slug nor the print_title nor title found, using nova_fingerprint, instead")
+          articleName = Context.XsltExtensions.trimText(CosmosArticle.nova_fingerprint, 80, " ", "...")
+        End If
+        Dim bodyPlainText As String = CosmosArticle.plain_text
+        'fix for ampersand
+        bodyPlainText = bodyPlainText.Replace("&", "&amp;")
+        bodyPlainText = bodyPlainText.Replace(">", "&gt;")
+        bodyPlainText = bodyPlainText.Replace("<", "&lt;")
+        bodyPlainText = bodyPlainText.Replace(vbLf, "</p><p>")
+        bodyPlainText = "<p>" & bodyPlainText.Replace("\n", "</p><p>") & "</p>"
+
+        Dim bodyText As String = "<body>"
+        If String.Join(", ", CosmosArticle.authors).Length > 0 Then
+          bodyText = bodyText & "<byline>" & String.Join(", ", CosmosArticle.authors) & "</byline>"
+        End If
+        bodyText = bodyText & bodyPlainText & "</body>"
+        Dim transformHtmlToT As TransformXml = New TransformXml(Context) With {.Name = "convert html to t"}
+        transformHtmlToT.XmlIn = XDocument.Parse(bodyText)
+        transformHtmlToT.Xslt = htmlTotXslt
+        Dim transformHtmlToTRes As TransformXmlResult = transformHtmlToT.Do()
+        Dim bodyElement As XElement = transformHtmlToTRes.XmlOut.Root()
+
+        Dim head As String = CosmosArticle.title_text
+        Dim subhead As String = CosmosArticle.title3_text
+        Dim kicker As String = CosmosArticle.title2_text
+        Dim intro As String = CosmosArticle.intro_text
+        Dim artauthors As String = ""
+        If CosmosArticle.authors.Count > 0 Then artauthors = String.Join(", ", CosmosArticle.authors)
+
+        Dim pullquote As String = CosmosArticle.synopsis
+        pullquote = pullquote.Replace("&", "&amp;")
+        pullquote = pullquote.Replace(">", "&gt;")
+        pullquote = pullquote.Replace("<", "&lt;")
+
+        Dim pubInfoElement As XElement = <pubInfo/>
+
+        Try
+          If Not CosmosArticle.published = Nothing AndAlso Not CosmosArticle.published = "null" Then
+            pubInfoElement.Add(<item name="Cosmos" value=<%= CosmosArticle.pub_url %> valueExtra=<%= CosmosArticle.key %> publicationDate=<%= Context.XsltExtensions.unixTimeToDateTime(CLng(CosmosArticle.published) / 1000) %>/>)
+          End If
+        Catch ex As Exception
+          Utils.LogWarning("COuld not parse the 'published' date")
+        End Try
+
+        Dim photoCaptionElements As XElement = <root/>
+       ' For Each image In CosmosArticle.images
+       '   If Not (image.fingerprint Is Nothing) And imgFolderId > 0 And extractDestId > 0 Then
+       '     photoCaptionElements.Add(createPhotoCaptionElement(image, folderPath, imgFolderPath, imgFolderId, extractDestId))
+       '   End If
+       ' Next
+           Parallel.ForEach(CosmosArticle.images, Sub(image)
+                                                 If Not (image.fingerprint Is Nothing) And imgFolderId > 0 And extractDestId > 0 Then
+                                                   photoCaptionElements.Add(createPhotoCaptionElement(image, folderPath, imgFolderPath, imgFolderId, extractDestId))
+                                                 End If
+                                               End Sub)
+        'create keywords node
+        Dim keywordsElement As XElement = <keywords/>
+        If CosmosArticle.keywords.Count > 0 Then
+          keywordsElement.Add(Context.XsltExtensions.paragraphs(String.Join(",", CosmosArticle.keywords), "item", ",").GetXElement.Elements)
+        End If
+        Dim printSections As String = ""
+        If CosmosArticle.sections IsNot Nothing Then printSections = CosmosArticle.sections.FirstOrDefault.section
+
+        'put in notes field all the relevant info, waiting to define ad-hoc attributes in Gn4 schema definition
+        Dim notes As String = "p" & CosmosArticle.print_page_no & " [" & CosmosArticle.print_priority & "] " & printSections &  " [" & CosmosArticle.modified_user & "]"
+        Dim articleXml As XElement = <article name=<%= Context.XsltExtensions.trimText(articleName, 80, " ", "...") %>>
+                                       <folderRef><keyVal><%= folderPath %></keyVal></folderRef>
+                                       <authors><%= artauthors %></authors>
+                                       <txts>
+                                         <%= createTxtElement("head", folderPath, head) %>
+                                         <%= createTxtElement("subhead", folderPath, subhead) %>
+                                         <%= createTxtElement("kicker", folderPath, kicker) %>
+                                         <%= createTxtElement("intro", folderPath, intro) %>
+                                         <body name=<%= Guid.NewGuid %>>
+                                           <folderRef><keyVal><%= folderPath %></keyVal></folderRef>
+                                           <tText>
+                                             <%= transformHtmlToTRes.XmlOut.Root() %>
+                                           </tText>
+                                         </body>
+                                         <%= createTxtElement("pullquote", folderPath, pullquote) %>
+                                         <%= photoCaptionElements.Elements %>
+                                       </txts>
+                                       <%= keywordsElement %>
+                                       <notes><%= notes %></notes>
+                                       <%= pubInfoElement %>
+                                     </article>
+
+        Dim importXmlArticle As ImportXml = New ImportXml(Context) With {.Name = "Import article"}
+        importXmlArticle.XmlIn = New XDocument(articleXml)
+        Dim importXmlArticleRes As ImportXmlResult = importXmlArticle.Do()
+        If importXmlArticleRes.IdsOut.Count > 0 Then
+          'Import again to create the first version
+          importXmlArticle.Do()
+          Utils.LogInfo("gn4id:" & importXmlArticleRes.IdsOut(0))
+          articleXml.Save(strDebugFileName & "_ok.xml")
+        Else
+          Utils.LogError("could not create article")
+          articleXml.Save(strDebugFileName & "_error.xml")
+        End If
+
+
+      Next
+    Catch ex As Exception
+      Utils.LogError(ex.Message)
+      File.AppendAllText(strDebugFileName & "_error.xml", ex.Message)
+      Return
+    End Try
+]]></Sequential>
+</codeWorkflow>
