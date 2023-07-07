@@ -1,0 +1,131 @@
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:msxml="urn:schemas-microsoft-com:xslt" xmlns:nav="http://www.teradp.com/schemas/GN4/1/ObjNav.xsd" xmlns:t="http://www.teradp.com/schemas/GN3/t.xsd" xmlns:fn="http://www.teradp.com/schemas/GN4/1/Xslt" xmlns:edfn="http://www.teradp.com/schemas/GN4/1/EditorialXslt" xmlns:oc="http://www.teradp.com/schemas/GN4/1/OperationContext.xsd" xmlns:lc="http://www.teradp.com/schemas/GN4/1/LoginContext.xsd" xmlns:gn4="urn:schemas-teradp-com:gn4tera" exclude-result-prefixes="msxml nav fn oc lc gn4 edfn t">
+  <xsl:output method="xml" encoding="ISO-8859-1" />
+  <xsl:param name="context" />
+  <xsl:param name="pars" />
+  <xsl:variable name="imagePath">
+    <xsl:if test="$pars and $pars/*/add[starts-with(@key,'destDir')]/@value">
+      <xsl:value-of select="concat($pars/*/add[starts-with(@key,'destDir')]/@value,'\PICS\')" />
+    </xsl:if>
+  </xsl:variable>
+  <xsl:variable name="regExInvalidChars"><![CDATA[[ ?:\\/*""<>|\s'— ]]]></xsl:variable>
+  <xsl:template name="unSmartQuote">
+    <xsl:param name="str" />
+    <xsl:variable name="sq" select="'‘’‚‛′‵'" />
+    <xsl:variable name="dq" select="'“”„‟″‶'" />
+    <xsl:variable name="dash" select="'–—―'" />
+    <xsl:variable name="temp" select="translate($str, $sq, &quot;''''''&quot;)" />
+    <xsl:copy-of select="translate(translate($temp, $dq, '&quot;&quot;&quot;&quot;&quot;&quot;'), $dash, '---')" />
+  </xsl:template>
+  <xsl:template match="gn4:article|/*/gn4:article">
+    <xsl:variable name="artId" select="fn:objectIdFromString(@id)" />
+    <xsl:variable name="artName" select="fn:replace(translate(translate(normalize-space(@name),' ',''),'—',''),$regExInvalidChars,'_')" />
+    <xsl:variable name="keywords">
+      <xsl:for-each select="gn4:keywords/gn4:item">
+        <xsl:value-of select="." />
+        <xsl:if test="not(position()=last())">, </xsl:if>
+      </xsl:for-each>
+    </xsl:variable>
+    <xsl:variable name="embargoDate" select="fn:formatDateTime(fn:addTime($context/oc:OperationContext/@Now, '10:00:00'),'yyyy-MM-ddThh:mm:ss')" />
+    <xsl:variable name="gn4Article">
+      <xsl:element name="article">
+        <xsl:for-each select="gn4:txts/gn4:*">
+          <xsl:variable name="txtGeometry" select="nav:referencing/nav:referencingBy[@attrName='txtGeometry.txtRef']/nav:refs/nav:refObject/gn4:txtGeometry" />
+          <xsl:variable name="format">
+            <xsl:choose>
+              <xsl:when test="$txtGeometry">
+                <xsl:value-of select="fn:objectIdFromString($txtGeometry/gn4:contextRef/@idref)" />
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:text>Default:J</xsl:text>
+              </xsl:otherwise>
+            </xsl:choose>
+          </xsl:variable>
+          <xsl:variable name="typeName" select="local-name()" />
+          <xsl:copy-of select="edfn:convertMarkup(gn4:tText,$typeName,$format,'','p','1,2,3,4,1690',false)" />
+        </xsl:for-each>
+      </xsl:element>
+    </xsl:variable>
+    <xsl:variable name="gn4art" select="msxml:node-set($gn4Article)" />
+    <xsl:variable name="edition" select="gn4:pageLayers/gn4:item/gn4:editionRef/nav:refObject/gn4:edition" />
+    <xsl:variable name="page" select="gn4:pageLayers/gn4:item/gn4:pageRef/nav:refObject/gn4:page" />
+    <xsl:variable name="zone" select="gn4:pageLayers/gn4:item/gn4:pageRef/nav:refObject/gn4:page/gn4:zoneRef/nav:refObject/gn4:zone/@name" />
+    <xsl:variable name="section" select="gn4:pageLayers/gn4:item/gn4:pageRef/nav:refObject/gn4:page/gn4:sectionRef/nav:refObject/gn4:section/@name" />
+    <xsl:variable name="source" select="nav:sources/nav:actionDesc/gn4:object/nav:refObject/gn4:story/gn4:sourceRef/nav:refObject/gn4:source/@name" />
+    <article artId="{$artId}" artName="{$artName}" UserId="1" artLinkedTo="{concat($edition/@descName,' ',$page/@descName)}" Section="" Keywords="{$keywords}" artNotes="" artContact="" artContactTel="" CreatorId="{fn:objectIdFromString(gn4:creatorRef/@idref)}" ModifierId="{fn:objectIdFromString(gn4:modifierRef/@idref)}" SenderId="4" allowComments="1" Embargo="{$embargoDate}" Title="{$edition/gn4:titleRef/nav:refObject/gn4:title/@name}">
+      <head>
+        <headline>
+          <xsl:apply-templates select="$gn4art/article/head" />
+        </headline>
+        <xsl:if test="$gn4art/article/subhead">
+          <kicker>
+            <xsl:apply-templates select="$gn4art/article/subhead" />
+          </kicker>
+        </xsl:if>
+      </head>
+      <body>
+        <xsl:apply-templates select="$gn4art/article/body" />
+      </body>
+      <xsl:for-each select="gn4:txts/gn4:photoCaption">
+        <xsl:variable name="img" select="gn4:ref/nav:refObject/gn4:img" />
+        <xsl:variable name="imageName" select="fn:replace(normalize-space($img/@name),$regExInvalidChars,'_')" />
+        <xsl:variable name="imgposition" select="position()" />
+        <xsl:choose>
+          <xsl:when test="$img/nav:sources/nav:actionDesc/@ObjectId">
+            <xsl:variable name="image" select="$img/nav:sources/nav:actionDesc/gn4:object/nav:refObject/gn4:image" />
+            <photo artName="{concat($artId,'-',fn:objectIdFromString($image/@id))}" refMIME="{$image/gn4:data/@mime}" refURL="{concat($imagePath,$imageName,'.jpg')}" refWidth="{$image/@width}" refHeight="{$image/@height}" refPixWidth="{$image/@pixWidth}" refPixHeight="{$image/@pixHeight}" Keywords="" artDisplayImage="1">
+              <xsl:apply-templates select="$gn4art/article/photoCaption[position()=$imgposition]" />
+            </photo>
+          </xsl:when>
+          <xsl:otherwise>
+            <photo artName="{concat($artId,'-',fn:objectIdFromString($img/@id))}" refMIME="{$img/gn4:low/@mime}" refURL="{concat($imagePath,$imageName,'.jpg')}" refWidth="{$img/@width}" refHeight="{$img/@height}" refPixWidth="{$img/@pixWidth}" refPixHeight="{$img/@pixHeight}" Keywords="" artDisplayImage="1">
+              <xsl:apply-templates select="$gn4art/article/photoCaption[position()=$imgposition]" />
+            </photo>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:for-each>
+      <xsl:if test="$pars and $pars/*/add[starts-with(@key,'debug')]/@value">
+      </xsl:if>
+    </article>
+  </xsl:template>
+  <xsl:template match="caption">
+    <xsl:if test="string-length(.)&gt;0">
+      <caption>
+        <xsl:apply-templates />
+      </caption>
+    </xsl:if>
+  </xsl:template>
+  <xsl:template match="beat">
+    <xsl:if test="string-length(.)&gt;0">
+      <beat>
+        <xsl:apply-templates />
+      </beat>
+    </xsl:if>
+  </xsl:template>
+  <xsl:template match="byline">
+    <xsl:if test="string-length(.)&gt;0">
+      <byline>
+        <xsl:apply-templates />
+      </byline>
+    </xsl:if>
+  </xsl:template>
+  <xsl:template match="credit">
+    <xsl:if test="string-length(.)&gt;0">
+      <credit>
+        <xsl:apply-templates />
+      </credit>
+    </xsl:if>
+  </xsl:template>
+  <xsl:template match="p|dateline|headline|crosshead">
+    <xsl:if test="string-length(.)&gt;0">
+      <p>
+        <xsl:apply-templates />
+      </p>
+    </xsl:if>
+  </xsl:template>
+  <xsl:template match="br">
+    <br />
+  </xsl:template>
+  <xsl:template match="text()">
+    <xsl:value-of select="." xml:space="preserve" />
+  </xsl:template>
+</xsl:stylesheet>
