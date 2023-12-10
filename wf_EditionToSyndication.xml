@@ -1,0 +1,252 @@
+<codeWorkflow xmlns="http://www.teradp.com/schemas/GN4/1/WFRes.xsd">
+  <Imports>
+    <Import>TeraDP.GN4.Common</Import>
+    <Import>System.Text.RegularExpressions</Import>
+  </Imports>
+  <Members><![CDATA[
+Dim xloadArts As XElement =
+     <xsl:stylesheet version="1.0"
+         xmlns:gn4="urn:schemas-teradp-com:gn4tera"
+		 xmlns:t="http://www.teradp.com/schemas/GN3/t.xsd"
+         xmlns:fn="http://www.teradp.com/schemas/GN4/1/Xslt"
+		 xmlns:edfn="http://www.teradp.com/schemas/GN4/1/EditorialXslt"
+         xmlns:lc="http://www.teradp.com/schemas/GN4/1/LoginContext.xsd"
+         xmlns:nav="http://www.teradp.com/schemas/GN4/1/ObjNav.xsd"
+         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 exclude-result-prefixes="xsl xsi nav lc t gn4 fn edfn">
+         <xsl:param name="context"/>
+         <xsl:param name="pars"/>
+
+         <xsl:template match="/">
+             <root>
+                 <xsl:apply-templates/>
+             </root>
+         </xsl:template>
+         <xsl:template match="gn4:article">
+             <xsl:variable name="ed" select="gn4:pageLayers/gn4:item[1]/gn4:editionRef/nav:refObject/gn4:edition"/>
+             <!--xsl:variable name="region"><xsl:value-of select="gn4:pageLayers/gn4:item[1]/gn4:regionRef/gn4:region/@name"/></xsl:variable-->
+			 <xsl:variable name="author">
+				<xsl:choose>
+					<xsl:when test="gn4:authorRef/nav:refObject/gn4:user"><xsl:value-of select="gn4:authorRef/nav:refObject/gn4:user/@fullName"/></xsl:when>
+					<xsl:when test="./gn4:txts/gn4:body/gn4:tText/t:t[1]/t:p[t:tag[@n='Byline']]"><xsl:value-of select="./gn4:txts/gn4:body/gn4:tText/t:t[1]/t:p[t:tag[@n='Byline']]"/></xsl:when>
+					<xsl:when test="./gn4:txts/gn4:body/gn4:tText/t:t[1]/t:p[t:tag[@n='by']]"><xsl:value-of select="./gn4:txts/gn4:body/gn4:tText/t:t[1]/t:p[t:tag[@n='by']]"/></xsl:when>
+				</xsl:choose>
+			 </xsl:variable>
+             <Article>
+                 <xsl:attribute name="Name"><xsl:value-of select="@name"/></xsl:attribute>
+                 <xsl:attribute name="ID"><xsl:value-of select="fn:objectIdFromString(@id)"/></xsl:attribute>
+                 <xsl:attribute name="EditorialKey"><xsl:value-of select="@id"/></xsl:attribute><!-- irrelevant -->
+
+                 <Title><xsl:value-of select="$ed/gn4:titleRef/nav:refObject/gn4:title/@name"/></Title>
+                 <Edition><xsl:value-of select="$ed/@descName"/></Edition>
+                 <PublicationDate><xsl:value-of select="fn:replace(fn:formatDateTime($ed/@date,'yyyy/MM/dd'),'-','/')"/></PublicationDate>
+                 <PageNumber><xsl:value-of select="gn4:pageLayers/gn4:item[1]/gn4:pageRef/nav:refObject/gn4:page/@number"/></PageNumber>
+                 <Section><xsl:value-of select="gn4:pageLayers/gn4:item[1]/gn4:sectionRef/nav:refObject/gn4:section/@name"/></Section>
+                 <Keywords>
+                     <xsl:for-each select="gn4:keywords/gn4:item">
+                         <xsl:value-of select="concat(.,';')"/>
+                     </xsl:for-each>
+                 </Keywords>
+                 <Categories>
+                     <xsl:for-each select="gn4:cats/gn4:item">
+                         <xsl:value-of select="concat(@name,';')"/>
+                     </xsl:for-each>
+                 </Categories>
+                 <Element Type="Headline">
+                     <Byline><xsl:value-of select="$author"/></Byline>
+                     <Content><xsl:value-of select="normalize-space(string(gn4:txts/gn4:head/gn4:tText))"/></Content>
+                     <CopyRight>Internal</CopyRight>
+                 </Element>
+                 <Element Type="Body">
+                     <Byline><xsl:value-of select="$author"/></Byline>
+                     <Content>
+						<xsl:for-each select="gn4:txts/gn4:body/gn4:tText/t:t/t:p">
+							<xsl:if test="not(self::node()[t:tag[@n='Byline']]) and not(self::node()[t:tag[@n='by']])">
+								<xsl:value-of select="normalize-space(string(.))"/><xsl:text>&#xd;&#xa;</xsl:text>
+							</xsl:if>
+						</xsl:for-each>
+						<!--xsl:copy-of select="edfn:publishHtml(gn4:txts/gn4:body/gn4:tText, 'body', fn:objectIdFromString(gn4:txts/gn4:body/gn4:contextRef/nav:refObject/gn4:justContext/@id), $region, 'p', '1,2,3,4', 'htmlTags', '')"/-->
+					 </Content>
+                     <CopyRight>Internal</CopyRight>
+                 </Element>
+
+                 <!-- This is the same data for .txt file -->
+                 <TEXT>
+                     <PUBLICATION><xsl:value-of select="$ed/gn4:titleRef/nav:refObject/gn4:title/@name"/></PUBLICATION>
+                     <EDITION><xsl:value-of select="$ed/@descName"/></EDITION>
+                     <PUBLICATIONDATE><xsl:value-of select="fn:replace(fn:formatDateTime($ed/@date,'yyyy/MM/dd'),'-','/')"/></PUBLICATIONDATE>
+                     <PAGE><xsl:value-of select="gn4:pageLayers/gn4:item[1]/gn4:pageRef/nav:refObject/gn4:page/@number"/></PAGE>
+                     <KEYWORDS>
+                         <xsl:for-each select="gn4:keywords/gn4:item">
+                             <xsl:value-of select="concat(.,';')"/>
+                         </xsl:for-each>
+                     </KEYWORDS>
+                     <CATEGORY>
+                         <xsl:for-each select="gn4:cats/gn4:item">
+                             <xsl:value-of select="concat(@name,';')"/>
+                         </xsl:for-each>
+                     </CATEGORY>
+                     <BYLINE><xsl:value-of select="$author"/></BYLINE>
+                     <HEADLINE><xsl:value-of select="normalize-space(string(gn4:txts/gn4:head/gn4:tText))"/></HEADLINE>
+                     <TEXTBODY>
+					 	<xsl:for-each select="gn4:txts/gn4:body/gn4:tText/t:t/t:p">
+							<xsl:if test="not(self::node()[t:tag[@n='Byline']]) and not(self::node()[t:tag[@n='by']])">
+								<xsl:value-of select="normalize-space(string(.))"/><xsl:text>&#xd;&#xa;</xsl:text>
+							</xsl:if>
+						</xsl:for-each>
+						<!--xsl:copy-of select="edfn:publishHtml(gn4:txts/gn4:body/gn4:tText, 'body', fn:objectIdFromString(gn4:txts/gn4:body/gn4:contextRef/nav:refObject/gn4:justContext/@id), $region, 'p', '1,2,3,4', 'htmlTags', '')"/-->
+					 </TEXTBODY>
+                 </TEXT>
+             </Article>
+         </xsl:template>
+
+         <xsl:template match="gn4:story">
+             <xsl:variable name="ed" select="nav:referencing/nav:referencingBy[@attrName='document.stories']/nav:refs/nav:refObject[1]/gn4:document"/>
+			 <xsl:variable name="author">
+				<xsl:choose>
+					<xsl:when test="string-length(gn4:authors)&gt;0"><xsl:value-of select="gn4:authors"/></xsl:when>
+					<xsl:when test="./gn4:xmlText/div[@class='gn4xml_body']/p[@class='gn4xml_byline']"><xsl:value-of select="./gn4:xmlText/div[@class='gn4xml_body']/p[@class='gn4xml_byline']"/></xsl:when>
+				</xsl:choose>
+			 </xsl:variable>
+			 <xsl:variable name="pGrp" select="fn:applyRegExp($ed/gn4:title,'^(.*?)\s(.*?)\s(.*?)\s(\d*)','s')"/>
+			 <xsl:variable name="pNo">
+				<xsl:choose>
+					<xsl:when test="$pGrp/*"><xsl:value-of select="string($pGrp/*[5])"/></xsl:when>
+					<xsl:otherwise>0</xsl:otherwise>
+				</xsl:choose>
+			 </xsl:variable>
+             <Article>
+                 <xsl:attribute name="Name"><xsl:value-of select="@name"/></xsl:attribute>
+                 <xsl:attribute name="ID"><xsl:value-of select="fn:objectIdFromString(@id)"/></xsl:attribute>
+                 <xsl:attribute name="EditorialKey"><xsl:value-of select="gn4:sourceId"/></xsl:attribute><!-- irrelevant -->
+
+                 <Title><xsl:value-of select="gn4:publicationRef/nav:refObject/gn4:title/@name"/></Title>
+                 <Edition><xsl:value-of select="$ed/gn4:title"/></Edition>
+                 <PublicationDate><xsl:value-of select="fn:replace(fn:formatDateTime($ed/gn4:publicationDate,'yyyy/MM/dd'),'-','/')"/></PublicationDate>
+                 <PageNumber><xsl:value-of select="$pNo"/></PageNumber>
+                 <Section><xsl:value-of select="$ed/gn4:sectionRef/nav:refObject/gn4:section/@name"/></Section>
+                 <Keywords>
+                     <xsl:for-each select="gn4:keywords/gn4:item">
+                         <xsl:value-of select="concat(.,';')"/>
+                     </xsl:for-each>
+                 </Keywords>
+                 <Categories>
+                     <xsl:for-each select="gn4:cats/gn4:item">
+                         <xsl:value-of select="concat(@name,';')"/>
+                     </xsl:for-each>
+                 </Categories>
+                 <Element Type="Headline">
+                     <Byline><xsl:value-of select="$author"/></Byline>
+                     <Content><xsl:value-of select="normalize-space(string(gn4:xmlText//p[@class='gn4xml_headline']))"/></Content>
+                     <CopyRight>Internal</CopyRight>
+                 </Element>
+                 <Element Type="Body">
+                     <Byline><xsl:value-of select="$author"/></Byline>
+                     <Content>
+						<xsl:for-each select="gn4:xmlText/div[@class='gn4xml_body']/p">
+							<xsl:if test="not(self::node()[@class='gn4xml_byline'])">
+								<xsl:value-of select="normalize-space(string(.))"/><xsl:text>&#xd;&#xa;</xsl:text>
+							</xsl:if>
+						</xsl:for-each>
+					 </Content>
+                     <CopyRight>Internal</CopyRight>
+                 </Element>
+
+                 <!-- This is the same data for .txt file -->
+                 <TEXT>
+                     <PUBLICATION><xsl:value-of select="gn4:publicationRef/nav:refObject/gn4:title/@name"/></PUBLICATION>
+                     <EDITION><xsl:value-of select="$ed/gn4:title"/></EDITION>
+                     <PUBLICATIONDATE><xsl:value-of select="fn:replace(fn:formatDateTime($ed/gn4:publicationDate,'yyyy/MM/dd'),'-','/')"/></PUBLICATIONDATE>
+                     <PAGE><xsl:value-of select="$pNo"/></PAGE>
+                     <KEYWORDS>
+                         <xsl:for-each select="gn4:keywords/gn4:item">
+                             <xsl:value-of select="concat(.,';')"/>
+                         </xsl:for-each>
+                     </KEYWORDS>
+                     <CATEGORY>
+                         <xsl:for-each select="gn4:cats/gn4:item">
+                             <xsl:value-of select="concat(@name,';')"/>
+                         </xsl:for-each>
+                     </CATEGORY>
+                     <BYLINE><xsl:value-of select="$author"/></BYLINE>
+                     <HEADLINE><xsl:value-of select="normalize-space(string(gn4:xmlText//p[@class='gn4xml_headline']))"/></HEADLINE>
+                     <TEXTBODY>
+					 	<xsl:for-each select="gn4:xmlText/div[@class='gn4xml_body']/p">
+							<xsl:if test="not(self::node()[@class='gn4xml_byline'])">
+								<xsl:value-of select="normalize-space(string(.))"/><xsl:text>&#xd;&#xa;</xsl:text>
+							</xsl:if>
+						</xsl:for-each>
+					 </TEXTBODY>
+                 </TEXT>
+             </Article>
+         </xsl:template>
+
+     </xsl:stylesheet>
+]]></Members>
+  <Sequential Description="report of what library objects have been used on a specific edition" DisplayProgress="true"><![CDATA[
+' Arena workflow to export editions to Syndication partners,
+        ' generating a file for each story in both XML and TXT format (the latter is a fake-XML)
+
+        Dim sDestFolder As String = Context.ParValue("destFolder")
+        If String.IsNullOrEmpty(sDestFolder) Then
+            Utils.LogError("Missing parameter 'destFolder'")
+            Return
+        End If
+        If Not sDestFolder.EndsWith("\") Then sDestFolder = sDestFolder + "\"
+        Dim sEdDate As String = Context.ParValue("editionDate")
+        If String.IsNullOrEmpty(sEdDate) Then
+            sEdDate = Now().AddDays(-1).ToString("yyyy-MM-dd") ' yesterday if no date is set
+        End If
+        Dim sTitle As String = Context.ParValue("title")
+
+		' Article query: "gn4:article[gn4:pageLayers/gn4:item/gn4:editionRef/nav:refObject/gn4:edition[substring(@date,1,10)=$edDate"
+        Dim oSearch As CodeActivity.Search = New CodeActivity.Search(Context) With {
+            .Name = "SearchStories",
+            .XQuery = "gn4:story[gn4:publicationDate=concat($edDate,'Z')"
+            }
+        If Not String.IsNullOrEmpty(sTitle) Then
+            'oSearch.XQuery += " and gn4:titleRef/nav:refObject/gn4:title/@name='$edTitle']"
+			oSearch.XQuery += " and gn4:publicationRef/nav:refObject/gn4:title/@name='$edTitle']"
+            oSearch.Pars.Add("edTitle", sTitle)
+        Else
+            'oSearch.XQuery += "]" ' We need this for the article
+        End If
+        oSearch.XQuery += "]"
+        oSearch.Pars.Add("edDate", sEdDate)
+        Try
+			Utils.LogInfo(sEdDate)
+            Dim oSearchRes As CodeActivity.SearchResult = oSearch.Do()
+
+            If oSearchRes.IdsCount > 0 Then
+                Dim oLoadArts As LoadObjects = New LoadObjects(Context) With {
+                .Name = "LoadArts",
+                .Description = String.Format("Load articles of {0} for {1}", sTitle, sEdDate),
+                .ObjectIds = oSearchRes.IdsOut,
+                .DataAsId = True,
+                .Xslt = xloadArts
+                }
+                Dim oLoadArtsRes As LoadObjectsResult = oLoadArts.Do()
+                If oLoadArtsRes.XmlOut IsNot Nothing Then
+					'oLoadArtsRes.XmlOut.Save("C:\TEMP\-\ALL.xml")
+                    For Each art As XElement In oLoadArtsRes.XmlOut.XPathSelectElements("//Article")
+                        Try
+                            Dim fName As String = art.<Title>.Value.ToString + "_" + Date.Parse(art.<PublicationDate>.Value.ToString()).ToString("ddMMyy") + "_" + art.@Name
+                            ' strip illegal characters from the filename
+                            fName = Regex.Replace(fName, "[ ':|&\$'!\(\)\=\@\~\#\%\^\*\[\]\/]", "-")
+                            Dim xTxt = art.<TEXT>.FirstOrDefault()
+                            IO.File.WriteAllText(IO.Path.Combine(sDestFolder, fName + ".txt"), xTxt.ToString.Substring(6,xTxt.ToString.Length-7-6).Replace("</","<\"))
+                            xTxt.Remove()
+                            art.Save(IO.Path.Combine(sDestFolder, fName + ".xml"))
+                        Catch ex As Exception
+                            Utils.LogError("Article loop: " + ex.Message)
+                        End Try
+                    Next ' article
+                End If ' Do we have the XML of the articles?
+            End If ' Do we have any Ids?
+			Utils.LogInfo(String.Format("{0} articles exported to {1}", oSearchRes.IdsCount, sDestFolder))
+        Catch ex As Exception
+            Utils.LogError(ex.Message)
+        End Try
+]]></Sequential>
+</codeWorkflow>
